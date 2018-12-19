@@ -19,7 +19,7 @@ class TextEditor(tk.Tk):
                             "font" : ("Arial", 12, "normal", "roman")
                             }
         self.runs = []
-        self.runs.append(Run())
+        self.runs.append(Run("0.0", tk.END))
         self.menu = tk.Menu(self)
         self.configure(menu=self.menu)
         self.file= tk.Menu(self.menu, tearoff=False)
@@ -123,6 +123,8 @@ class TextEditor(tk.Tk):
 
 
     def bold(self):
+        if not self.text_editor.tag_ranges(tk.SEL):
+            return
         if "bold" in self.text_editor.tag_names(tk.SEL_FIRST):
             self.text_editor.tag_remove("bold", tk.SEL_FIRST, tk.SEL_LAST)
         elif "italic" in self.text_editor.tag_names(tk.SEL_FIRST):
@@ -133,6 +135,8 @@ class TextEditor(tk.Tk):
             self.text_editor.tag_add("bold", tk.SEL_FIRST, tk.SEL_LAST)
 
     def italic(self):
+        if not self.text_editor.tag_ranges(tk.SEL):
+            return
         if "italic" in self.text_editor.tag_names(tk.SEL_FIRST):
             self.text_editor.tag_remove("italic", tk.SEL_FIRST, tk.SEL_LAST)
         elif "bold" in self.text_editor.tag_names(tk.SEL_FIRST):
@@ -143,6 +147,8 @@ class TextEditor(tk.Tk):
             self.text_editor.tag_add("italic", tk.SEL_FIRST, tk.SEL_LAST)
 
     def bold_italic(self, *args):
+        if not self.text_editor.tag_ranges(tk.SEL):
+            return
         if args:
             self.text_editor.tag_remove("bold_italic", tk.SEL_FIRST, tk.SEL_LAST)
             args[0]()
@@ -156,6 +162,8 @@ class TextEditor(tk.Tk):
         self.text_editor.tag_add("underline", tk.SEL_FIRST, tk.SEL_LAST)
 
     def justify(self, type):
+        if not self.text_editor.tag_ranges(tk.SEL):
+            return
         for just in ["left", "right", "center"]:
             if just in self.text_editor.tag_names(tk.SEL_FIRST):
                 self.text_editor.tag_remove(just, tk.SEL_FIRST)
