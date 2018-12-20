@@ -19,7 +19,7 @@ class TextEditor(tk.Tk):
                             "font" : ("Arial", 12, "normal", "roman")
                             }
         self.runs = []
-        self.runs.append(Run("0.0", tk.END))
+        self.runs.append(Run("0.0"))
         self.menu = tk.Menu(self)
         self.configure(menu=self.menu)
         self.file= tk.Menu(self.menu, tearoff=False)
@@ -59,10 +59,29 @@ class TextEditor(tk.Tk):
         self.text_editor.tag_configure("bold_italic", font=("Arial", 12, "bold", "italic"))
         self.text_editor.tag_configure("right", justify="right")
         self.text_editor.tag_configure("center", justify="center")
+        self.char_num_label = tk.Label(text="Chars")
+        self.char_num_label.pack()
         self.hot_keys()
         self.document = Document(directory = self.preferences["dir"])
         self.update()
         self.config_drop_down()
+        self.text_editor.mark_set(1, "1.0")
+        self._orig = self._w + "_orig"
+        self.call("rename", self.text_editor._w, self._orig)
+        self.createcommand(self.text_editor._w, self.proxy)
+        self.text_editor.bind("<<TextModified>>", self.callback)
+
+
+    def proxy(self, command, *args):
+        cmd = (self._orig, command) + args
+        result = self.call(cmd)
+        if command in ("insert", "delete", "replace"):
+            self.text_editor.event_generate("<<TextModified>>")
+        return result
+
+    def callback(self, event):
+        s = event.widget.get("1.0", "end-1c")
+        self.char_num_label.configure(text="{} words - {} chars".format(len(s.split), len(s)))
 
     def change_font_size(self, *event):
         if tk.SEL:
@@ -86,7 +105,6 @@ class TextEditor(tk.Tk):
         x = 0
         for f in font.families():
             tag = f.replace(" ", "")
-            print(tag)
             self.t.tag_configure(tag, font=(f, 10))
             self.t.tag_bind(tag, "<Enter>", lambda event, t = tag : self.highlight(t))
             self.t.tag_bind(tag, "<Leave>", lambda event, t=tag: self.remove_highlight(t))
@@ -121,9 +139,14 @@ class TextEditor(tk.Tk):
         self.bind("<Control-o>", self.open)
         self.bind("<Control-s>", lambda event, b=False : self.save(askfile=b))
 
-
     def bold(self):
         if not self.text_editor.tag_ranges(tk.SEL):
+            self.text_editor.mark_set("test", tk.INSERT)
+            for tag in self.text_editor.tag_names():
+               if tag in self.document.formatting.keys():
+                   rge = self.text_editor.tag_ranges(tag)
+                   for x in range(0, len(rge), 2):
+                        print(rge[x].string, rge[x+1].string)
             return
         if "bold" in self.text_editor.tag_names(tk.SEL_FIRST):
             self.text_editor.tag_remove("bold", tk.SEL_FIRST, tk.SEL_LAST)
@@ -157,7 +180,6 @@ class TextEditor(tk.Tk):
             self.text_editor.tag_remove("italic", tk.SEL_FIRST, tk.SEL_LAST)
             self.text_editor.tag_add("bold_italic", tk.SEL_FIRST, tk.SEL_LAST)
 
-
     def underline(self):
         self.text_editor.tag_add("underline", tk.SEL_FIRST, tk.SEL_LAST)
 
@@ -190,14 +212,12 @@ class TextEditor(tk.Tk):
             self.filename.configure(text=file_to_open.name)
             self.apply_formatting(self.document.formatting)
 
-
     def apply_formatting(self, formatting_dict):
         for key in formatting_dict:
             for idx in formatting_dict[key]:
                 self.text_editor.tag_add(key, idx[0], idx[1])
 
     def save(self, *event, askfile=True):
-        print("askfile", askfile)
         if askfile:
             fn = fd.asksaveasfile()
             if fn == None:
@@ -217,7 +237,7 @@ class TextEditor(tk.Tk):
         #Save as this format
         else:
             self.document.raw = self.text_editor.get("1.0", tk.END + "-1c")
-            for tag in self.text_editor.tag_names("1.0"):
+            for tag in self.text_editor.tag_names():
                if tag in self.document.formatting.keys():
                    rge = self.text_editor.tag_ranges(tag)
                    for x in range(0, len(rge), 2):
@@ -248,7 +268,7 @@ class Document:
         }
 
 class Run:
-    def __init__(self, start, end, bold="normal", italic="roman", center=False, right=False, font="Arial", size=12):
+    def __init__(self, start, bold="normal", italic="roman", center=False, right=False, font="Arial", size=12):
         self.bold = bold
         self.italic = italic
 
