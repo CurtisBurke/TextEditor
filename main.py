@@ -222,8 +222,11 @@ class TextEditor(tk.Tk):
                    rge = self.text_editor.tag_ranges(tag)
                    for x in range(0, len(rge), 2):
                         self.document.formatting[tag].append([rge[x].string, rge[x+1].string])
-            with open(self.document.path, "wb") as f:
-                pickle.dump(self.document, f, protocol=pickle.HIGHEST_PROTOCOL)
+            try:
+                with open(self.document.path, "wb") as f:
+                    pickle.dump(self.document, f, protocol=pickle.HIGHEST_PROTOCOL)
+            except FileNotFoundError:
+                self.save(askfile=True)
 
 
 
