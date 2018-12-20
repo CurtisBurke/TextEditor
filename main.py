@@ -81,7 +81,7 @@ class TextEditor(tk.Tk):
 
     def callback(self, event):
         s = event.widget.get("1.0", "end-1c")
-        self.char_num_label.configure(text="{} words - {} chars".format(len(s.split), len(s)))
+        self.char_num_label.configure(text="{} words - {} chars".format(len(s.split()), len(s)))
 
     def change_font_size(self, *event):
         if tk.SEL:
